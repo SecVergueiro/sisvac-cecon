@@ -1,0 +1,35 @@
+name: 🔄 Reset Diário do Banco (Portfólio)
+
+# Quando o robô vai rodar?
+on:
+  schedule:
+    # Roda todos os dias às 07:00 da manhã no fuso UTC (que dá de madrugada no Brasil)
+    - cron: '0 7 * * *'
+  
+  # Esse comando mágico permite que você vá no painel do GitHub e clique num botão "Run workflow" para rodar manualmente quando quiser testar!
+  workflow_dispatch: 
+
+jobs:
+  wipe-and-seed:
+    runs-on: ubuntu-latest # O computador gratuito do GitHub
+
+    steps:
+      - name: 📥 Clonar o repositório
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Usa o Node 20
+
+      - name: 📦 Instalar dependências
+        # Como é um monorepo, instalamos na raiz
+        run: npm install
+
+      - name: 🌱 Rodar o Script de Limpeza e Seed
+        # Executa o seu arquivo direto pelo Node
+        run: node apps/web/scripts/seed-full.mjs
+        env:
+          # Puxando as chaves secretas que vamos configurar no Passo 2
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
