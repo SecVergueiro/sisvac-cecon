@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getServidores, getServidoresStats } from '@/lib/queries/servidores'
 import ServidoresClient from './ServidoresClient'
 

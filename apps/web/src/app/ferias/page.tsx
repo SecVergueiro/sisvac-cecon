@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getServidoresParaFerias } from '@/lib/queries/ferias'
 import FeriasClient from './FeriasClient'
 

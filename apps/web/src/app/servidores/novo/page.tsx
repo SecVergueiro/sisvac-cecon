@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getCargosESetores } from './actions'
 import NovoServidorClient from './NovoServidorClient'
 

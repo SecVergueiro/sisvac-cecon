@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getSolicitacoesPendentes, getSolicitacoesHistorico } from '@/lib/queries/aprovacoes'
 import AprovacoesClient from './AprovacoesClient'
 
