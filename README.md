@@ -46,10 +46,23 @@ npm run test
 
 > **Desenvolvido com o máximo zelo de Performance de Nuvem e TDD. Idealizado para avaliação Enterprise.**
 
+O sistema está online e disponível para testes. Para facilitar a avaliação das regras de negócio e do Controle de Acesso Baseado em Perfis (RBAC), disponibilizamos contas de demonstração.
+
+> ⚠️ **Aviso de Privacidade e Segurança:** > Para garantir a integridade da demonstração, o banco de dados é **limpo e recriado automaticamente todos os dias** durante a madrugada. Fique à vontade para criar cadastros, aprovar solicitações e testar todas as funcionalidades!
+
+Acesse o sistema por aqui: **[🔗 https://sisvac.vercel.app/]**
+
+
 ### 👤 Acesso de Demonstração (Portfólio)
 Para testar a aplicação sem precisar se cadastrar, utilize as credenciais abaixo. 
 *(Nota: Por segurança e privacidade, o banco de dados é limpo e recriado automaticamente todos os dias).*
 
-- **E-mail:** `visitante@sisvac.com`
-- **Senha:** `demo123`
-- **Perfil:** Gestor de RH (Pode aprovar férias, cadastrar funcionários, etc.)
+### 🏢 1. Perfil: Gestor de RH
+Tem visão gerencial do sistema. Responsável por administrar o quadro de funcionários e avaliar os pedidos.
+- **E-mail:** `rh@sisvac.com`
+- **O que testar:** Cadastrar novos servidores, visualizar a tabela geral de solicitações, e Aprovar/Negar férias pendentes.
+
+### 👤 2. Perfil: Servidor Comum
+Visão restrita do funcionário. Acessa apenas seus próprios dados funcionais.
+- **E-mail:** `servidor@sisvac.com`
+- **O que testar:** Visualizar o próprio saldo de férias (dias disponíveis/utilizados) e abrir uma nova solicitação de férias.
