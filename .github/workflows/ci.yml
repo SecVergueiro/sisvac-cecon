@@ -32,6 +32,9 @@ jobs:
       run: npm run lint
 
     - name: Construindo Componentes (Types, NestJS & Next.js)
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       run: npm run build
 
     - name: Atirando Testes Unitários e Mocks contra Servidores
