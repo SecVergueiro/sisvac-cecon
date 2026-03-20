@@ -1,0 +1,38 @@
+name: SisVac2 Pipeline (CI)
+
+on:
+  push:
+    branches: [ "main", "dev", "master" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-build:
+    name: Auditing Pipeline
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - name: Baixando repositório
+      uses: actions/checkout@v4
+
+    - name: Ligando Server Machine Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Instalando as Dependências Limpas do Monorepo
+      run: npm ci
+
+    - name: Garantindo Montagem Estrutural (Linters de Types)
+      run: npm run lint
+
+    - name: Construindo Componentes (Types, NestJS & Next.js)
+      run: npm run build
+
+    - name: Atirando Testes Unitários e Mocks contra Servidores
+      run: npm run test
