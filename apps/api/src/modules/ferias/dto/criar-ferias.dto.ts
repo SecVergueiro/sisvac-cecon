@@ -1,5 +1,12 @@
-import { IsString, IsInt, IsUUID, IsEnum, IsOptional, Min } from 'class-validator';
-import { TipoAfastamento, TipoFracionamento } from '@sisvac/types';
+import {
+  IsString,
+  IsInt,
+  IsUUID,
+  IsEnum,
+  IsOptional,
+  Min,
+} from "class-validator";
+import { TipoAfastamento, TipoFracionamento } from "@sisvac/types";
 
 export class CriarFeriasDto {
   @IsString()
