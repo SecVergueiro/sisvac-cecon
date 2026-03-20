@@ -32,4 +32,8 @@ jobs:
         env:
           # Puxando as chaves secretas que vamos configurar no Passo 2
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+<<<<<<< HEAD
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+=======
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+>>>>>>> cdaa650e51ce3e48e07ca06c1cabaccebd1c1303
