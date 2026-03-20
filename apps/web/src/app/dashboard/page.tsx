@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { getDashboardKpis, getAprovacoesRecentes, getServidoresEmDescanso } from '@/lib/queries/dashboard'
 import DashboardClient from './DashboardClient'
 
