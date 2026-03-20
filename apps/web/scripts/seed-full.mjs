@@ -3,19 +3,36 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, '.env.local');
-const envContent = fs.readFileSync(envPath, 'utf8');
-const env = {};
-envContent.split('\n').forEach(line => {
-  if (line.includes('=')) {
-    const [key, ...vals] = line.split('=');
-    env[key.trim()] = vals.join('=').trim().replace(/['"]/g, '');
-  }
-});
+// 1. Tenta pegar as variáveis direto do ambiente (que vêm das Secrets do GitHub Actions)
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+let supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+// 2. Se NÃO achou no ambiente (ou seja, você está rodando localmente no seu PC), lê do arquivo .env.local
+if (!supabaseUrl || !supabaseKey) {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const envPath = path.resolve(__dirname, '.env.local');
+    const envContent = fs.readFileSync(envPath, 'utf8');
+
+    envContent.split('\n').forEach(line => {
+      if (line.includes('=')) {
+        const [key, ...vals] = line.split('=');
+        const value = vals.join('=').trim().replace(/['"]/g, '');
+        if (key.trim() === 'NEXT_PUBLIC_SUPABASE_URL') supabaseUrl = value;
+        if (key.trim() === 'SUPABASE_SERVICE_ROLE_KEY') supabaseKey = value;
+      }
+    });
+  } catch (err) {
+    console.log('Aviso: .env.local não encontrado, tentando prosseguir...');
+  }
+}
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("❌ FALTAM AS CHAVES DO SUPABASE! Configure as Secrets no GitHub ou o .env.local no PC.");
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function ins(table, data) {
   const { data: r, error } = await supabase.from(table).insert(data).select().single();
