@@ -65,4 +65,4 @@ Tem visão gerencial do sistema. Responsável por administrar o quadro de funcio
 ### 👤 2. Perfil: Servidor Comum
 Visão restrita do funcionário. Acessa apenas seus próprios dados funcionais.
 - **E-mail:** `servidor@sisvac.com`
-- **O que testar:** Visualizar o próprio saldo de férias (dias disponíveis/utilizados) e abrir uma nova solicitação de férias.
+- **O que testar:** Visualizar o próprio saldo de férias (dias disponíveis/utilizados) e abrir uma nova solicitação de férias!

@@ -111,7 +111,7 @@ export async function getServidoresEmDescanso(): Promise<ServidorEmDescanso[]> {
         funcionarios ( nome )
       )
     `)
-    .eq('status', 'EM_GOZO')
+    .in('status', ['EM_GOZO', 'APROVADO'])
     .lte('data_inicio', hoje)
     .gte('data_fim', hoje)
     .order('data_fim', { ascending: true })

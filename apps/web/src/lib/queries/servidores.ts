@@ -123,35 +123,73 @@ const STATUS_MAP: Record<string, string> = {
 export async function getServidorDetalhe(matriculaId: string): Promise<ServidorDetalhe | null> {
   const supabase = createServerClient()
 
+  // Try the view first (has saldo data)
   const { data, error } = await supabase
     .from('vw_servidores_busca')
     .select('*')
     .eq('id_matricula', matriculaId)
-    .single()
+    .maybeSingle()
 
-  if (error || !data) {
-    console.error('[getServidorDetalhe]', error?.message)
+  if (data) {
+    const situacao = !data.em_risco_perda ? 'Ativo' : 'Risco perda'
+    return {
+      idMatricula:  data.id_matricula,
+      nome:         data.nome,
+      cpf:          data.cpf,
+      matricula:    data.matricula,
+      cargo:        data.cargo,
+      setor:        data.setor,
+      orgao:        'FCECON',
+      vinculo:      data.tipo_vinculo === 'ESTATUTARIO' ? 'Estatutário' : data.tipo_vinculo,
+      admissao:     new Date(data.data_admissao).toLocaleDateString('pt-BR'),
+      saldoFerias:  data.saldo_ferias_total ?? 0,
+      saldoLicenca: data.saldo_licenca_total ?? 0,
+      emRisco:      data.em_risco_perda ?? false,
+      situacao,
+    }
+  }
+
+  // Fallback: query base tables for newly created servers (no exercício yet)
+  const { data: mat, error: matErr } = await supabase
+    .from('matriculas')
+    .select(`
+      id,
+      matricula,
+      tipo_vinculo,
+      data_admissao,
+      cargo:cargos(nome),
+      setor:setores(nome),
+      funcionario:funcionarios(id, nome, cpf)
+    `)
+    .or(`id.eq.${matriculaId},id_funcionario.eq.${matriculaId}`)
+    .maybeSingle()
+
+  if (matErr || !mat) {
+    console.error('[getServidorDetalhe] fallback failed:', matErr?.message ?? 'not found')
     return null
   }
 
-  const situacao = !data.em_risco_perda ? 'Ativo' : 'Risco perda'
+  const cargoNome  = (mat.cargo as any)?.nome  ?? 'Sem cargo'
+  const setorNome  = (mat.setor as any)?.nome  ?? 'Sem setor'
+  const func       = mat.funcionario as any
 
   return {
-    idMatricula:  data.id_matricula,
-    nome:         data.nome,
-    cpf:          data.cpf,
-    matricula:    data.matricula,
-    cargo:        data.cargo,
-    setor:        data.setor,
+    idMatricula:  mat.id,
+    nome:         func?.nome  ?? 'Servidor',
+    cpf:          func?.cpf   ?? '',
+    matricula:    mat.matricula,
+    cargo:        cargoNome,
+    setor:        setorNome,
     orgao:        'FCECON',
-    vinculo:      data.tipo_vinculo === 'ESTATUTARIO' ? 'Estatutário' : data.tipo_vinculo,
-    admissao:     new Date(data.data_admissao).toLocaleDateString('pt-BR'),
-    saldoFerias:  data.saldo_ferias_total ?? 0,
-    saldoLicenca: data.saldo_licenca_total ?? 0,
-    emRisco:      data.em_risco_perda ?? false,
-    situacao,
+    vinculo:      mat.tipo_vinculo === 'ESTATUTARIO' ? 'Estatutário' : (mat.tipo_vinculo ?? 'N/A'),
+    admissao:     mat.data_admissao ? new Date(mat.data_admissao).toLocaleDateString('pt-BR') : '-',
+    saldoFerias:  0,
+    saldoLicenca: 0,
+    emRisco:      false,
+    situacao:     'Ativo',
   }
 }
+
 
 // ── Histórico de solicitações do servidor ─────────────────────
 export async function getHistoricoServidor(matriculaId: string): Promise<ServidorSolicitacao[]> {

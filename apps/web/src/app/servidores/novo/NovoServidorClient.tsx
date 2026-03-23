@@ -98,77 +98,7 @@ export default function NovoServidorClient({ cargos, setores }: Props) {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{
-          --navy:#06224A;--navy-mid:#0D3570;--accent:#3B7BF6;
-          --text:#1a1a2e;--text2:#4a5568;--text3:#9aa5b4;
-          --border:#e2e8f0;--border2:#cbd5e0;
-          --surface:#f7f8fc;--surface2:#edf0f5;--white:#fff;
-          --serif:'Instrument Serif',serif;--sans:'DM Sans',sans-serif;
-          --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
-          --amber:#d97706;--amber-bg:#fffbeb;
-          --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
-          --sh:0 1px 3px rgba(0,0,0,.06);--sh-md:0 4px 16px rgba(0,0,0,.1);
-          --r:12px;--r-sm:8px;
-        }
-        html,body{height:100%;font-family:var(--sans);-webkit-font-smoothing:antialiased;background:var(--surface)}
-        .shell{display:flex;height:100vh;overflow:hidden}
-        .sidebar{width:232px;min-width:232px;background:var(--navy);display:flex;flex-direction:column;position:relative}
-        .sidebar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,rgba(0,0,0,.18));pointer-events:none}
-        .sb-logo{padding:20px 18px 10px;display:flex;align-items:center;gap:10px}
-        .sb-logo-mark{width:28px;height:28px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:7px;display:flex;align-items:center;justify-content:center}
-        .sb-logo-name{font-family:var(--serif);font-size:17px;color:#fff;letter-spacing:.5px}
-        .sb-section{padding:16px 18px 6px;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.22)}
-        .sb-nav{flex:1;padding:0 10px;overflow-y:auto}
-        .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);color:rgba(255,255,255,.55);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s}
-        .nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
-        .nav-item.active{background:rgba(59,123,246,.22);color:#fff}
-        .sb-user{position:relative;z-index:1;margin:8px 10px 12px;padding:10px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;display:flex;align-items:center;gap:9px}
-        .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#6AA3FF);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
-        .su-name{font-size:12.5px;font-weight:600;color:#fff}
-        .su-role{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}
-        .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-        .topbar{padding:16px 28px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
-        .tb-back{width:32px;height:32px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .15s;flex-shrink:0}
-        .tb-back:hover{background:var(--surface);border-color:var(--border2)}
-        .tb-title{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.3px}
-        .tb-sub{font-size:12.5px;color:var(--text3);margin-top:2px}
-        .content{flex:1;overflow-y:auto;padding:24px 28px}
-        .form-wrap{max-width:680px}
-        .form-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:16px;box-shadow:var(--sh)}
-        .form-card h4{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;letter-spacing:-.2px}
-        .badge{font-size:11px;font-weight:700;background:var(--navy);color:#fff;padding:2px 8px;border-radius:100px}
-        .f-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-        .f-field{display:flex;flex-direction:column;gap:5px}
-        .f-field.full{grid-column:1/-1}
-        .f-label{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.1px}
-        .f-inp{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-family:var(--sans);font-size:13.5px;color:var(--text);outline:none;transition:all .2s}
-        .f-inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,123,246,.11);background:#fff}
-        .f-inp.ok{border-color:var(--green)}
-        .f-inp.err{border-color:var(--red);background:var(--red-bg)}
-        .f-hint{font-size:11.5px;color:var(--text3);margin-top:2px}
-        .f-hint.ok{color:var(--green)}
-        .f-hint.err{color:var(--red)}
-        select.f-inp{cursor:pointer}
-        .f-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--border);margin-top:4px}
-        .btn{padding:9px 18px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:#fff;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
-        .btn:hover{border-color:var(--border2);background:var(--surface);color:var(--text)}
-        .btn:disabled{opacity:.5;cursor:not-allowed;transform:none !important}
-        .btn.navy{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}
-        .btn.navy:hover:not(:disabled){background:var(--navy-mid);transform:translateY(-1px);box-shadow:0 4px 12px rgba(6,34,74,.2)}
-        .spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .alert-err{display:flex;align-items:center;gap:9px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;color:var(--red);margin-bottom:14px}
-        .success-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;padding:64px 32px;animation:fadeUp .4s ease}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-        .success-icon{width:64px;height:64px;background:var(--green-bg);border:2px solid var(--green-border);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px}
-        .success-icon svg{width:28px;height:28px;stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round}
-        .success-wrap h2{font-family:var(--serif);font-size:26px;color:var(--text);margin-bottom:8px}
-        .success-wrap p{font-size:14px;color:var(--text2);line-height:1.6;max-width:400px;margin-bottom:24px}
-        @media(max-width:768px){.sidebar{display:none}.f-grid{grid-template-columns:1fr}}
-      `}</style>
+      
 
       <div className="shell">
         <Sidebar variant="admin" activeItem="servidores" />

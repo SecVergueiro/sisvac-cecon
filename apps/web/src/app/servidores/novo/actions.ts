@@ -42,7 +42,7 @@ export async function cadastrarServidorAction(
     return { ok: false, error: 'Esta matrícula já está em uso.' }
   }
 
-  // Chamar a função do banco
+  // Chamar a função do banco via service_role
   const { data, error } = await supabase.rpc('fn_cadastrar_servidor', {
     p_nome:          input.nome,
     p_cpf:           input.cpf,
@@ -54,12 +54,15 @@ export async function cadastrarServidorAction(
   })
 
   if (error) {
-    console.error('[cadastrarServidorAction]', error.message)
+    console.error('[cadastrarServidorAction] FULL ERROR:', JSON.stringify(error, null, 2))
     if (error.message.includes('cpf'))       return { ok: false, error: 'CPF inválido ou já cadastrado.' }
     if (error.message.includes('matricula')) return { ok: false, error: 'Matrícula inválida ou já em uso.' }
     if (error.message.includes('setor'))     return { ok: false, error: 'Setor não encontrado.' }
     if (error.message.includes('cargo'))     return { ok: false, error: 'Cargo não encontrado.' }
-    return { ok: false, error: 'Erro ao cadastrar. Verifique os dados e tente novamente.' }
+    if (error.message.includes('Could not find') || error.message.includes('does not exist')) {
+      return { ok: false, error: 'Erro de configuração do sistema. Entre em contato com o administrador.' }
+    }
+    return { ok: false, error: `Erro ao cadastrar: ${error.message}` }
   }
 
   revalidatePath('/servidores')

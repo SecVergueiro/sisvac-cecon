@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import AdminUserCard from './AdminUserCard'
 
@@ -30,6 +31,7 @@ interface SidebarProps {
 export default function Sidebar({ variant, activeItem, onItemClick, pendentesCount = 0 }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const [isOpen, setIsOpen] = useState(false)
 
   type MenuItem = { id: string; route: string; icon: string; label: string; badge?: number };
 
@@ -51,6 +53,7 @@ export default function Sidebar({ variant, activeItem, onItemClick, pendentesCou
   const menu = variant === 'admin' ? adminMenu : servidorMenu;
 
   const handleClick = (m: any) => {
+    setIsOpen(false)
     if (onItemClick) {
       onItemClick(m.id, m.route);
     } else {
@@ -67,10 +70,22 @@ export default function Sidebar({ variant, activeItem, onItemClick, pendentesCou
   }
 
   return (
-    <aside className="sidebar">
-      <div className="sb-logo" style={{ display: 'flex', justifyContent: 'center', padding: '24px 18px 10px' }}>
-        <img src="/logomore.png" alt="Logo SISVAC" style={{ maxHeight: '42px', maxWidth: '100%', objectFit: 'contain' }} />
-      </div>
+    <>
+      <button 
+        type="button" 
+        className="mobile-menu-btn fixed-hamburger" 
+        onClick={() => setIsOpen(true)}
+        aria-label="Abrir menu"
+      >
+        <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
+      </button>
+
+      <div className={`sidebar-overlay ${isOpen ? 'active' : ''}`} onClick={() => setIsOpen(false)} />
+
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sb-logo" style={{ display: 'flex', justifyContent: 'center', padding: '24px 18px 10px' }}>
+          <img src="/logomore.png" alt="Logo SISVAC" style={{ maxHeight: '42px', maxWidth: '100%', objectFit: 'contain' }} />
+        </div>
       
       <div className="sb-section" style={{ marginTop: 12 }}>Menu</div>
       <div className="sb-nav" style={{ flex: 1, paddingBottom: 6 }}>
@@ -90,5 +105,6 @@ export default function Sidebar({ variant, activeItem, onItemClick, pendentesCou
         <span style={{ fontSize: '9px', color: 'rgba(255,255,255,.3)', letterSpacing: '.2px' }}>© {new Date().getFullYear()} Isaque Vergueiro</span>
       </div>
     </aside>
+  </>
   )
 }
