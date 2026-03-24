@@ -12,7 +12,7 @@ if (!supabaseUrl || !supabaseKey) {
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    const envPath = path.resolve(__dirname, '.env.local');
+    const envPath = path.resolve(__dirname, '../.env.local');
     const envContent = fs.readFileSync(envPath, 'utf8');
 
     envContent.split('\n').forEach(line => {
@@ -77,26 +77,26 @@ async function wipeDatabase() {
 async function createVisitorLogin() {
   console.log('\n👥 Criando Contas de Demonstração (Admin, RH e Servidor)...');
 
-  // Definindo as 3 contas que o recrutador poderá usar
+  // Definindo as contas alinhadas perfeitamente com a tabela de funcionários
   const contas = [
     {
       email: 'rh@sisvac.com',
       role: 'RH',
-      cpf: '000.000.000-00', // Liga com o "Gestor RH" do seu seed
-      nome: 'Gestor RH (Visitante)'
+      cpf: '000.000.000-00',
+      nome: 'Gestor RH' // <-- Alinhado com a linha de criação do RH
     },
     {
       email: 'servidor@sisvac.com',
       role: 'SERVIDOR',
-      cpf: '111.111.111-11', // Liga com o "João Servidor" do seu seed
-      nome: 'Servidor Comum (Visitante)'
+      cpf: '111.111.111-11',
+      nome: 'João Servidor (Teste)' // <-- Alinhado com a linha de criação do João
     },
   ];
 
   for (const conta of contas) {
     const { error } = await supabase.auth.admin.createUser({
       email: conta.email,
-      password: 'demo123',
+      password: 'sisvac123',
       email_confirm: true,
       user_metadata: {
         nome: conta.nome,
@@ -112,6 +112,7 @@ async function createVisitorLogin() {
     }
   }
 }
+
 async function run() {
   // 🧹 1º PASSO REAL: Limpar tudo antes de começar
   await wipeDatabase();
@@ -139,7 +140,7 @@ async function run() {
   console.log('\n3. Funcionários...');
   const func = await ins('funcionarios', { nome: 'João Servidor (Teste)', cpf: '111.111.111-11' });
   const funcAdmin = await ins('funcionarios', { nome: 'Gestor RH', cpf: '000.000.000-00' });
-  
+
   // Novos funcionários para popular o dashboard
   const f1 = await ins('funcionarios', { nome: 'Ana L. Guerreiro', cpf: '222.222.222-22' });
   const f2 = await ins('funcionarios', { nome: 'Fatima K. Oliveira', cpf: '333.333.333-33' });
@@ -167,16 +168,18 @@ async function run() {
 
   if (!mat?.id) { console.error('\n❌ Matrícula falhou.'); return; }
 
-  // 5. Exercícios (CORRIGIDO: Inserindo o ano_final obrigatório)
+  // 5. Exercícios
   console.log('\n5. Exercícios...');
   const ex23 = await ins('exercicios', { ano_inicial: 2023, ano_final: 2024 });
   const ex24 = await ins('exercicios', { ano_inicial: 2024, ano_final: 2025 });
   const ex25 = await ins('exercicios', { ano_inicial: 2025, ano_final: 2026 });
+  const ex26 = await ins('exercicios', { ano_inicial: 2026, ano_final: 2027 }); // <- Exercício de 2026!
 
-  // 6. Saldos (CORRIGIDO: Removido avos_adquiridos que não existe no banco)
+  // 6. Saldos de Férias
   console.log('\n6. Saldos de Férias...');
   if (ex24?.id) await ins('saldos_ferias', { id_matricula: mat.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 0 });
   if (ex25?.id) await ins('saldos_ferias', { id_matricula: mat.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 });
+  if (ex26?.id) await ins('saldos_ferias', { id_matricula: mat.id, id_exercicio: ex26.id, dias_direito: 30, dias_utilizados: 0 }); // <- Saldo de 2026 para o João!
 
   // Saldos para os novos funcionários (gerando risco para Ana, Fatima, Carlos)
   if (ex23?.id) {
@@ -184,36 +187,36 @@ async function run() {
     await ins('saldos_ferias', { id_matricula: m2.id, id_exercicio: ex23.id, dias_direito: 30, dias_utilizados: 0 }); // Fatima
   }
   if (ex24?.id) {
-    await ins('saldos_ferias', { id_matricula: m1.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 0 }); 
-    await ins('saldos_ferias', { id_matricula: m2.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 0 }); 
-    await ins('saldos_ferias', { id_matricula: m3.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 0 }); 
-    await ins('saldos_ferias', { id_matricula: m4.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 10 }); 
-    await ins('saldos_ferias', { id_matricula: m5.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 30 }); 
+    await ins('saldos_ferias', { id_matricula: m1.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 0 });
+    await ins('saldos_ferias', { id_matricula: m2.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 0 });
+    await ins('saldos_ferias', { id_matricula: m3.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 0 });
+    await ins('saldos_ferias', { id_matricula: m4.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 10 });
+    await ins('saldos_ferias', { id_matricula: m5.id, id_exercicio: ex24.id, dias_direito: 30, dias_utilizados: 30 });
   }
   if (ex25?.id) {
-    await ins('saldos_ferias', { id_matricula: m1.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 }); 
-    await ins('saldos_ferias', { id_matricula: m2.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 }); 
-    await ins('saldos_ferias', { id_matricula: m3.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 }); 
-    await ins('saldos_ferias', { id_matricula: m4.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 }); 
-    await ins('saldos_ferias', { id_matricula: m5.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 }); 
+    await ins('saldos_ferias', { id_matricula: m1.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 });
+    await ins('saldos_ferias', { id_matricula: m2.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 });
+    await ins('saldos_ferias', { id_matricula: m3.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 });
+    await ins('saldos_ferias', { id_matricula: m4.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 });
+    await ins('saldos_ferias', { id_matricula: m5.id, id_exercicio: ex25.id, dias_direito: 30, dias_utilizados: 0 });
   }
 
   console.log('\n7. Criando Solicitações de Férias para o Dashboard...');
-  
+
   // PENDENTE
-  await ins('solicitacoes', { 
+  await ins('solicitacoes', {
     id_matricula: m1.id, tipo_afastamento: 'FERIAS_INTEGRAL', tipo_fracionamento: 'INTEGRAL', dias_solicitados: 30,
     data_inicio: '2026-10-01', data_fim: '2026-10-30', exercicio: '2024/2025', status: 'PENDENTE'
   });
-  
+
   // EM_ANALISE
-  await ins('solicitacoes', { 
+  await ins('solicitacoes', {
     id_matricula: m2.id, tipo_afastamento: 'FERIAS_FRACIONADA', tipo_fracionamento: 'QUINZE_QUINZE', dias_solicitados: 15,
     data_inicio: '2026-11-01', data_fim: '2026-11-15', exercicio: '2024/2025', status: 'EM_ANALISE'
   });
 
   // APROVADO
-  await ins('solicitacoes', { 
+  await ins('solicitacoes', {
     id_matricula: m3.id, tipo_afastamento: 'FERIAS_INTEGRAL', tipo_fracionamento: 'INTEGRAL', dias_solicitados: 30,
     data_inicio: '2026-12-01', data_fim: '2026-12-30', exercicio: '2024/2025', status: 'APROVADO'
   });
@@ -224,19 +227,19 @@ async function run() {
   const fimStr = trintaDiasFrente.toISOString().split('T')[0];
 
   // EM_GOZO (em descanso hoje)
-  await ins('solicitacoes', { 
+  await ins('solicitacoes', {
     id_matricula: m4.id, tipo_afastamento: 'FERIAS_INTEGRAL', tipo_fracionamento: 'INTEGRAL', dias_solicitados: 30,
     data_inicio: hojeStr, data_fim: fimStr, exercicio: '2024/2025', status: 'EM_GOZO'
   });
 
   // NEGADO
-  await ins('solicitacoes', { 
+  await ins('solicitacoes', {
     id_matricula: m5.id, tipo_afastamento: 'LICENCA_ESPECIAL', tipo_fracionamento: 'INTEGRAL', dias_solicitados: 90,
     data_inicio: '2026-08-01', data_fim: '2026-10-29', exercicio: '2024/2025', status: 'NEGADO',
     justificativa_negacao: 'Falta de efetivo no setor.'
   });
 
-  // 👤 Criar Acesso do Visitante (O Trigger vai validar com o Gestor RH acima)
+  // 👤 Criar Acesso do Visitante (O Trigger vai validar com o João Servidor e o Gestor RH acima)
   await createVisitorLogin();
 
   // 7. Verificar

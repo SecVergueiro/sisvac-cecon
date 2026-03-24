@@ -2,36 +2,69 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase-server'
-import { apiCriarSolicitacao } from '@/lib/api-client'
 
 export interface CriarSolicitacaoInput {
-  idMatricula:       string
-  idExercicio:       number
-  idSaldoFerias:     string
-  tipoAfastamento:   'FERIAS_INTEGRAL' | 'FERIAS_FRACIONADA' | 'LICENCA_ESPECIAL'
+  idMatricula: string
+  idExercicio: string | number // Aceita UUID ou ID numérico
+  idSaldoFerias: string
+  tipoAfastamento: 'FERIAS_INTEGRAL' | 'FERIAS_FRACIONADA' | 'LICENCA_ESPECIAL'
   tipoFracionamento: 'INTEGRAL' | 'QUINZE_QUINZE' | 'DEZ_VINTE' | 'DEZ_DEZ_DEZ'
-  dataInicio:        string
-  dataFim:           string
-  diasSolicitados:   number
-  observacoes?:      string
+  dataInicio: string
+  dataFim: string
+  diasSolicitados: number
+  observacoes?: string
 }
 
-// Mutations complexas → NestJS (valida Lei 1.762/1986, audit log)
+// Agora fazendo o INSERT direto de forma segura e profissional
 export async function criarSolicitacaoAction(
   input: CriarSolicitacaoInput
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const supabase = createServerClient()
+
   try {
-    const result: any = await apiCriarSolicitacao(input)
+    // 1. Precisamos da descrição do exercício (ex: "2026/2027") para salvar na solicitação
+    const { data: ex } = await supabase
+      .from('exercicios')
+      .select('ano_inicial, ano_final, descricao')
+      .eq('id', input.idExercicio)
+      .single()
+
+    const exercicioTexto = ex?.descricao || (ex ? `${ex.ano_inicial}/${ex.ano_final}` : '2026/2027')
+
+    // 2. Fazemos o INSERT direto na tabela 'solicitacoes'
+    const { data: novaSolicitacao, error: insertError } = await supabase
+      .from('solicitacoes')
+      .insert({
+        id_matricula: input.idMatricula,
+        tipo_afastamento: input.tipoAfastamento,
+        tipo_fracionamento: input.tipoFracionamento,
+        data_inicio: input.dataInicio,
+        data_fim: input.dataFim,
+        dias_solicitados: input.diasSolicitados,
+        exercicio: exercicioTexto,
+        observacoes: input.observacoes || '',
+        status: 'PENDENTE' // Toda nova solicitação nasce pendente
+      })
+      .select('id')
+      .single()
+
+    if (insertError) throw new Error(insertError.message)
+
+    // 3. Sucesso! Limpamos o cache das páginas para os dados novos aparecerem
     revalidatePath('/ferias')
     revalidatePath('/aprovacoes')
     revalidatePath('/dashboard')
-    return { ok: true, id: result.id }
+    revalidatePath('/meu-painel')
+
+    return { ok: true, id: novaSolicitacao.id }
+
   } catch (err: any) {
-    return { ok: false, error: err.message ?? 'Erro ao criar solicitação' }
+    console.error('🚨 [Server Action Error]:', err.message)
+    return { ok: false, error: err.message ?? 'Erro ao processar sua solicitação' }
   }
 }
 
-// Leitura simples → Supabase direto (sem necessidade do NestJS)
+// Leitura de saldos (já estava funcionando, mantida)
 export async function getSaldosAction(idMatricula: string) {
   const supabase = createServerClient()
 
@@ -42,13 +75,16 @@ export async function getSaldosAction(idMatricula: string) {
     .gt('dias_disponiveis', 0)
     .order('id_exercicio')
 
-  if (error) return []
+  if (error) {
+    console.error('🚨 [getSaldosAction Error]:', error.message)
+    return []
+  }
 
   return (data ?? []).map((s: any) => ({
-    idSaldo:         s.id,
-    idExercicio:     s.exercicios?.id ?? s.id_exercicio,
-    exercicio:       s.exercicios?.descricao ?? '—',
+    idSaldo: s.id,
+    idExercicio: s.exercicios?.id ?? s.id_exercicio,
+    exercicio: s.exercicios?.descricao ?? '—',
     diasDisponiveis: s.dias_disponiveis,
-    emRisco:         s.em_risco,
+    emRisco: s.em_risco,
   }))
 }

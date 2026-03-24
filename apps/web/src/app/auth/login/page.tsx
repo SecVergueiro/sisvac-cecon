@@ -226,7 +226,7 @@ export default function LoginPage() {
             <div className="lf-demo-compact">
               <div className="lf-demo-top">
                 <div className="lf-demo-badge">Contas de Demonstração</div>
-                <div className="lf-demo-hint">Senha: <strong>demo123</strong></div>
+                <div className="lf-demo-hint">Senha: <strong>sisvac123</strong></div>
               </div>
               <div className="lf-demo-info">
                 <div className="lf-demo-row">

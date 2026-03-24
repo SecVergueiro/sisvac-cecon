@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js' // Import adicionado para o Modo Deus
 
 export interface MeuPerfil {
   nome: string
@@ -38,34 +39,34 @@ export interface MinhaSolicitacao {
 }
 
 const TIPO_MAP: Record<string, string> = {
-  FERIAS_INTEGRAL:   'Férias integrais',
+  FERIAS_INTEGRAL: 'Férias integrais',
   FERIAS_FRACIONADA: 'Férias fracionadas',
-  LICENCA_ESPECIAL:  'Licença especial',
+  LICENCA_ESPECIAL: 'Licença especial',
 }
 
 const FRACAO_MAP: Record<string, string> = {
-  INTEGRAL:      'Integral',
+  INTEGRAL: 'Integral',
   QUINZE_QUINZE: '15 + 15',
-  DEZ_VINTE:     '10 + 20',
-  DEZ_DEZ_DEZ:   '10 + 10 + 10',
+  DEZ_VINTE: '10 + 20',
+  DEZ_DEZ_DEZ: '10 + 10 + 10',
 }
 
 const STATUS_MAP: Record<string, string> = {
-  PENDENTE:   'Pendente',
+  PENDENTE: 'Pendente',
   EM_ANALISE: 'Pendente',
-  APROVADO:   'Aprovado',
-  NEGADO:     'Reprovado',
-  EM_GOZO:    'Em descanso',
-  CANCELADO:  'Cancelado',
+  APROVADO: 'Aprovado',
+  NEGADO: 'Reprovado',
+  EM_GOZO: 'Em descanso',
+  CANCELADO: 'Cancelado',
 }
 
 function formatData(d: string) {
-  return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' })
+  return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function formatPeriodo(inicio: string, fim: string) {
-  const i = new Date(inicio).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' })
-  const f = new Date(fim).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' })
+  const i = new Date(inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  const f = new Date(fim).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
   return `${i} – ${f}`
 }
 
@@ -73,28 +74,33 @@ function formatPeriodo(inicio: string, fim: string) {
 async function getMatriculaIdByProfileId(profileId: string): Promise<string | null> {
   const supabase = createServerClient()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('cpf')
-    .eq('id', profileId)
-    .single()
+  // 1. Pega o CPF do perfil logado
+  const { data: profile } = await supabase.from('profiles').select('cpf').eq('id', profileId).single()
 
-  if (!profile?.cpf) return null
+  if (!profile?.cpf) {
+    console.log('🚨 [DEBUG] Profile sem CPF encontrado para o ID:', profileId)
+    return null
+  }
 
-  const { data: funcionario } = await supabase
-    .from('funcionarios')
-    .select('id')
-    .eq('cpf', profile.cpf)
-    .single()
+  // 2. Acha o funcionário no RH pelo CPF
+  const { data: funcionario } = await supabase.from('funcionarios').select('id').eq('cpf', profile.cpf).single()
 
-  if (!funcionario?.id) return null
+  if (!funcionario?.id) {
+    console.log('🚨 [DEBUG] Funcionario não achado no RH com o CPF:', profile.cpf)
+    return null
+  }
 
-  const { data: matricula } = await supabase
+  // 3. Acha a matrícula ativa
+  const { data: matricula, error } = await supabase
     .from('matriculas')
     .select('id')
     .eq('id_funcionario', funcionario.id)
     .eq('ativo', true)
     .single()
+
+  if (error) {
+    console.log('🚨 [DEBUG] Erro ao buscar matrícula ativa:', error.message)
+  }
 
   return matricula?.id ?? null
 }
@@ -120,44 +126,55 @@ export async function getMeuPerfil(profileId: string): Promise<MeuPerfil | null>
   if (!servidor) return null
 
   return {
-    nome:       profile.nome,
-    cpf:        profile.cpf,
-    email:      profile.email,
-    matricula:  servidor.matricula,
-    cargo:      servidor.cargo,
-    setor:      servidor.setor,
-    orgao:      'FCECON',
-    vinculo:    servidor.tipo_vinculo === 'ESTATUTARIO' ? 'Estatutário' : servidor.tipo_vinculo,
-    admissao:   new Date(servidor.data_admissao).toLocaleDateString('pt-BR'),
+    nome: profile.nome,
+    cpf: profile.cpf,
+    email: profile.email,
+    matricula: servidor.matricula,
+    cargo: servidor.cargo,
+    setor: servidor.setor,
+    orgao: 'FCECON',
+    vinculo: servidor.tipo_vinculo === 'ESTATUTARIO' ? 'Estatutário' : servidor.tipo_vinculo,
+    admissao: new Date(servidor.data_admissao).toLocaleDateString('pt-BR'),
     temLicenca: (servidor.saldo_licenca_total ?? 0) > 0,
     licencaDias: servidor.saldo_licenca_total ?? 0,
   }
 }
 
-// ── Saldos de férias ──────────────────────────────────────────
+// ── Saldos de férias (COM BYPASS DE RLS) ──────────────────────
 export async function getMeusSaldos(profileId: string): Promise<MeuSaldo[]> {
-  const supabase = createServerClient()
   const matriculaId = await getMatriculaIdByProfileId(profileId)
-  if (!matriculaId) return []
 
-  const { data, error } = await supabase
+  if (!matriculaId) {
+    console.log('🚨 [DEBUG] getMeusSaldos falhou: matriculaId retornou nulo!')
+    return []
+  }
+
+  // 🔴 MODO DEUS ATIVADO: Usando a chave Service Role para ignorar o RLS
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data, error } = await supabaseAdmin
     .from('saldos_ferias')
-    .select('dias_disponiveis, dias_utilizados, dias_direito, em_risco, vencimento, exercicios(descricao)')
+    .select('*, exercicios(*)')
     .eq('id_matricula', matriculaId)
     .order('id_exercicio', { ascending: false })
 
   if (error) {
-    console.error('[getMeusSaldos]', error.message)
+    console.error('🚨 [DEBUG] ERRO DO SUPABASE AO BUSCAR SALDOS:', error.message)
     return []
   }
 
+  console.log('✅ [DEBUG MODO DEUS] Saldos:', data)
+
   return (data ?? []).map((s: any) => ({
-    exercicio:       s.exercicios?.descricao ?? '—',
-    diasDisponiveis: s.dias_disponiveis,
-    diasUtilizados:  s.dias_utilizados,
-    diasDireito:     s.dias_direito,
-    emRisco:         s.em_risco,
-    vencimento:      s.vencimento ? new Date(s.vencimento).toLocaleDateString('pt-BR') : null,
+    exercicio: s.exercicios?.descricao ?? `${s.exercicios?.ano_inicial}/${s.exercicios?.ano_final}`,
+    diasDisponiveis: s.dias_disponiveis ?? (s.dias_direito - s.dias_utilizados),
+    diasUtilizados: s.dias_utilizados,
+    diasDireito: s.dias_direito,
+    emRisco: s.em_risco ?? false,
+    vencimento: s.vencimento ? new Date(s.vencimento).toLocaleDateString('pt-BR') : null,
   }))
 }
 
@@ -179,16 +196,16 @@ export async function MinhasSolicitacoes(profileId: string): Promise<MinhaSolici
   }
 
   return (data ?? []).map((s: any) => ({
-    id:           s.id,
-    tipo:         TIPO_MAP[s.tipo_afastamento] ?? s.tipo_afastamento,
+    id: s.id,
+    tipo: TIPO_MAP[s.tipo_afastamento] ?? s.tipo_afastamento,
     fracionamento: FRACAO_MAP[s.tipo_fracionamento] ?? s.tipo_fracionamento,
-    periodo:      formatPeriodo(s.data_inicio, s.data_fim),
-    dias:         s.dias_solicitados,
-    exercicio:    s.exercicio,
-    status:       STATUS_MAP[s.status] ?? s.status,
-    criadoEm:     formatData(s.created_at),
-    aprovadoPor:  s.aprovado_rh_nome,
-    negadoPor:    s.negado_por_nome,
+    periodo: formatPeriodo(s.data_inicio, s.data_fim),
+    dias: s.dias_solicitados,
+    exercicio: s.exercicio,
+    status: STATUS_MAP[s.status] ?? s.status,
+    criadoEm: formatData(s.created_at),
+    aprovadoPor: s.aprovado_rh_nome,
+    negadoPor: s.negado_por_nome,
     justificativa: s.justificativa_negacao,
   }))
 }

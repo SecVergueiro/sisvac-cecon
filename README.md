@@ -60,9 +60,11 @@ Para testar a aplicação sem precisar se cadastrar, utilize as credenciais abai
 ### 🏢 1. Perfil: Gestor de RH
 Tem visão gerencial do sistema. Responsável por administrar o quadro de funcionários e avaliar os pedidos.
 - **E-mail:** `rh@sisvac.com`
+- **Senha:** `sisvac123`
 - **O que testar:** Cadastrar novos servidores, visualizar a tabela geral de solicitações, e Aprovar/Negar férias pendentes.
 
 ### 👤 2. Perfil: Servidor Comum
 Visão restrita do funcionário. Acessa apenas seus próprios dados funcionais.
 - **E-mail:** `servidor@sisvac.com`
+- **Senha:** `sisvac123`
 - **O que testar:** Visualizar o próprio saldo de férias (dias disponíveis/utilizados) e abrir uma nova solicitação de férias!
