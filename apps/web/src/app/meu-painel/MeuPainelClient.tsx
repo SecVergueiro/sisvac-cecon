@@ -78,6 +78,9 @@ export default function MeuPainelClient({ perfil, saldos, solicitacoes }: Props)
   const [tab, setTab] = useState<Tab>('inicio')
   const [expandido, setExpandido] = useState<string | null>(solicitacoes[0]?.id ?? null)
 
+  // NOVO: Estado para o Modal de Detalhes do Histórico
+  const [detalhesHistorico, setDetalhesHistorico] = useState<MinhaSolicitacao | null>(null)
+
   // Form de solicitação
   const [isPending, startTransition] = useTransition()
   const [tipo, setTipo] = useState<'FERIAS_INTEGRAL' | 'FERIAS_FRACIONADA' | 'LICENCA_ESPECIAL'>('FERIAS_INTEGRAL')
@@ -143,7 +146,6 @@ export default function MeuPainelClient({ perfil, saldos, solicitacoes }: Props)
 
   return (
     <>
-
       <div className="shell">
         <Sidebar variant="servidor" activeItem={tab} onItemClick={(id) => setTab(id as Tab)} />
 
@@ -267,7 +269,12 @@ export default function MeuPainelClient({ perfil, saldos, solicitacoes }: Props)
                         </td>
                       </tr>
                     ) : solicitacoes.map(s => (
-                      <tr key={s.id}>
+                      <tr
+                        key={s.id}
+                        onClick={() => setDetalhesHistorico(s)}
+                        style={{ cursor: 'pointer' }}
+                        title="Clique para ver os detalhes"
+                      >
                         <td className="bold">{s.tipo}</td><td>{s.periodo}</td><td>{s.dias}d</td><td>{s.exercicio}</td><td>{s.criadoEm}</td>
                         <td><span className={pillStatus(s.status)}>{s.status}</span></td>
                       </tr>
@@ -292,7 +299,6 @@ export default function MeuPainelClient({ perfil, saldos, solicitacoes }: Props)
               </>
             )}
 
-            {/* TAB SOLICITAÇÃO NATIVA */}
             {tab === 'solicitar' && (
               <div>
                 {enviado ? (
@@ -371,6 +377,54 @@ export default function MeuPainelClient({ perfil, saldos, solicitacoes }: Props)
           </div>
         </div>
       </div>
+
+      {/* MODAL DE DETALHES PARA O SERVIDOR (NOVO!) */}
+      {detalhesHistorico && (
+        <div className="modal-overlay" onClick={() => setDetalhesHistorico(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500, width: '100%', textAlign: 'left' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text1)' }}>Detalhes da Solicitação</h3>
+              <button className="btn" style={{ padding: '6px 10px' }} onClick={() => setDetalhesHistorico(null)}>✕</button>
+            </div>
+
+            <div style={{ display: 'grid', gap: '12px', fontSize: 14, color: 'var(--text2)' }}>
+              <div><strong style={{ color: 'var(--text1)' }}>Tipo de Afastamento:</strong> {detalhesHistorico.tipo}</div>
+              <div><strong style={{ color: 'var(--text1)' }}>Período Solicitado:</strong> {detalhesHistorico.periodo} ({detalhesHistorico.dias} dias)</div>
+              <div><strong style={{ color: 'var(--text1)' }}>Exercício:</strong> {detalhesHistorico.exercicio}</div>
+              <div><strong style={{ color: 'var(--text1)' }}>Solicitado em:</strong> {detalhesHistorico.criadoEm}</div>
+
+              <div style={{ padding: '8px 12px', background: 'var(--surface2)', borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                <div>
+                  <strong style={{ color: 'var(--text1)', display: 'block', marginBottom: 2 }}>Status: <span className={pillStatus(detalhesHistorico.status)}>{detalhesHistorico.status}</span></strong>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 10, padding: 12, border: '1px dashed var(--border)', borderRadius: 6 }}>
+                <strong style={{ color: 'var(--text1)', display: 'block', marginBottom: 4 }}>Suas Observações:</strong>
+                <span style={{ whiteSpace: 'pre-wrap' }}>{(detalhesHistorico as any).observacoes || 'Nenhuma observação informada.'}</span>
+              </div>
+
+              {/* SE O RH NEGOU, MOSTRA A JUSTIFICATIVA EM DESTAQUE VERMELHO */}
+              {detalhesHistorico.status === 'Reprovado' && (
+                <div style={{ marginTop: 10, padding: 12, background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 6 }}>
+                  <strong style={{ color: 'var(--red)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <Icon t="warn" /> Motivo da Reprovação:
+                  </strong>
+                  <span style={{ whiteSpace: 'pre-wrap', color: 'var(--red)' }}>
+                    {(detalhesHistorico as any).justificativa || 'Nenhuma justificativa informada pelo RH.'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-actions" style={{ marginTop: 24, justifyContent: 'flex-end' }}>
+              <button className="btn navy" onClick={() => setDetalhesHistorico(null)}>
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

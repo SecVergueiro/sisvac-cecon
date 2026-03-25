@@ -8,7 +8,7 @@ import { signOut } from 'next-auth/react'
 import { criarSolicitacaoAction, getSaldosAction } from './actions'
 import type { ServidorParaFerias } from '@/lib/queries/ferias'
 
-type TipoAfastamento  = 'FERIAS_INTEGRAL' | 'FERIAS_FRACIONADA' | 'LICENCA_ESPECIAL'
+type TipoAfastamento = 'FERIAS_INTEGRAL' | 'FERIAS_FRACIONADA' | 'LICENCA_ESPECIAL'
 type TipoFracionamento = 'INTEGRAL' | 'QUINZE_QUINZE' | 'DEZ_VINTE' | 'DEZ_DEZ_DEZ'
 
 interface SaldoItem {
@@ -20,28 +20,28 @@ interface SaldoItem {
 }
 
 const FRACOS: { key: TipoFracionamento; label: string; dias: number }[] = [
-  { key: 'INTEGRAL',      label: 'Integral (30d)', dias: 30 },
-  { key: 'QUINZE_QUINZE', label: '15 + 15',        dias: 15 },
-  { key: 'DEZ_VINTE',     label: '10 + 20',        dias: 10 },
-  { key: 'DEZ_DEZ_DEZ',   label: '10 + 10 + 10',   dias: 10 },
+  { key: 'INTEGRAL', label: 'Integral (30d)', dias: 30 },
+  { key: 'QUINZE_QUINZE', label: '15 + 15', dias: 15 },
+  { key: 'DEZ_VINTE', label: '10 + 20', dias: 10 },
+  { key: 'DEZ_DEZ_DEZ', label: '10 + 10 + 10', dias: 10 },
 ]
 
 function NavIcon({ t }: { t: string }) {
-  const p = { stroke:'currentColor', fill:'none', strokeWidth:1.8, strokeLinecap:'round' as const, strokeLinejoin:'round' as const, viewBox:'0 0 24 24' }
-  switch(t) {
-    case 'grid':      return <svg {...p} width={16} height={16}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    case 'check-cal': return <svg {...p} width={16} height={16}><path d="M9 12l2 2 4-4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-    case 'cal':       return <svg {...p} width={16} height={16}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-    case 'users':     return <svg {...p} width={16} height={16}><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
-    case 'file':      return <svg {...p} width={16} height={16}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-    case 'settings':  return <svg {...p} width={16} height={16}><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-    case 'logout':    return <svg {...p} width={16} height={16}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    case 'logo':      return <svg {...p} width={14} height={14}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-    case 'search':    return <svg {...p} width={15} height={15}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    case 'send':      return <svg {...p} width={15} height={15}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
-    case 'ok':        return <svg {...p} width={14} height={14}><polyline points="20,6 9,17 4,12"/></svg>
-    case 'warn':      return <svg {...p} width={14} height={14}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    default:          return <svg {...p} width={16} height={16}><circle cx="12" cy="12" r="10"/></svg>
+  const p = { stroke: 'currentColor', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, viewBox: '0 0 24 24' }
+  switch (t) {
+    case 'grid': return <svg {...p} width={16} height={16}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+    case 'check-cal': return <svg {...p} width={16} height={16}><path d="M9 12l2 2 4-4" /><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+    case 'cal': return <svg {...p} width={16} height={16}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+    case 'users': return <svg {...p} width={16} height={16}><circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87" /></svg>
+    case 'file': return <svg {...p} width={16} height={16}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></svg>
+    case 'settings': return <svg {...p} width={16} height={16}><circle cx="12" cy="12" r="3" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" /></svg>
+    case 'logout': return <svg {...p} width={16} height={16}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16,17 21,12 16,7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+    case 'logo': return <svg {...p} width={14} height={14}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+    case 'search': return <svg {...p} width={15} height={15}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+    case 'send': return <svg {...p} width={15} height={15}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22,2 15,22 11,13 2,9" /></svg>
+    case 'ok': return <svg {...p} width={14} height={14}><polyline points="20,6 9,17 4,12" /></svg>
+    case 'warn': return <svg {...p} width={14} height={14}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+    default: return <svg {...p} width={16} height={16}><circle cx="12" cy="12" r="10" /></svg>
   }
 }
 
@@ -55,18 +55,18 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
   const [isPending, startTransition] = useTransition()
 
   // form
-  const [busca, setBusca]           = useState('')
-  const [sugestoes, setSugestoes]   = useState<ServidorParaFerias[]>([])
-  const [servidor, setServidor]     = useState<ServidorParaFerias | null>(null)
-  const [saldos, setSaldos]         = useState<SaldoItem[]>([])
+  const [busca, setBusca] = useState('')
+  const [sugestoes, setSugestoes] = useState<ServidorParaFerias[]>([])
+  const [servidor, setServidor] = useState<ServidorParaFerias | null>(null)
+  const [saldos, setSaldos] = useState<SaldoItem[]>([])
   const [saldoSelecionado, setSaldoSelecionado] = useState<SaldoItem | null>(null)
-  const [tipo, setTipo]             = useState<TipoAfastamento>('FERIAS_INTEGRAL')
-  const [fracao, setFracao]         = useState<TipoFracionamento>('INTEGRAL')
+  const [tipo, setTipo] = useState<TipoAfastamento>('FERIAS_INTEGRAL')
+  const [fracao, setFracao] = useState<TipoFracionamento>('INTEGRAL')
   const [dataInicio, setDataInicio] = useState('')
-  const [dataFim, setDataFim]       = useState('')
-  const [obs, setObs]               = useState('')
-  const [enviado, setEnviado]       = useState(false)
-  const [erro, setErro]             = useState('')
+  const [dataFim, setDataFim] = useState('')
+  const [obs, setObs] = useState('')
+  const [enviado, setEnviado] = useState(false)
+  const [erro, setErro] = useState('')
   const [loadingSaldos, setLoadingSaldos] = useState(false)
 
   // calcula dias solicitados
@@ -80,7 +80,7 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
     const d = new Date(dataInicio)
     const dias = tipo === 'LICENCA_ESPECIAL' ? 90
       : tipo === 'FERIAS_INTEGRAL' ? 30
-      : FRACOS.find(f => f.key === fracao)?.dias ?? 30
+        : FRACOS.find(f => f.key === fracao)?.dias ?? 30
     d.setDate(d.getDate() + dias - 1)
     setDataFim(d.toISOString().split('T')[0])
   }, [dataInicio, fracao, tipo, saldoSelecionado])
@@ -127,10 +127,10 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
 
     startTransition(async () => {
       const result = await criarSolicitacaoAction({
-        idMatricula:      servidor.idMatricula,
-        idExercicio:      saldoSelecionado.idExercicio,
-        idSaldoFerias:    saldoSelecionado.idSaldo,
-        tipoAfastamento:  tipo,
+        idMatricula: servidor.idMatricula,
+        idExercicio: saldoSelecionado.idExercicio,
+        idSaldoFerias: saldoSelecionado.idSaldo,
+        tipoAfastamento: tipo,
         tipoFracionamento: fracao,
         dataInicio,
         dataFim,
@@ -151,11 +151,11 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
     setSaldoSelecionado(null); setDataInicio(''); setDataFim(''); setObs(''); setErro('')
   }
 
-  const iniciais = servidor?.nome.split(' ').filter(Boolean).slice(0,2).map(n => n[0]).join('') ?? '?'
+  const iniciais = servidor?.nome.split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('') ?? '?'
 
   return (
     <>
-      
+
 
       <div className="shell">
         <Sidebar variant="admin" activeItem="ferias" />
@@ -170,13 +170,13 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
             {enviado ? (
               <div className="success-wrap">
                 <div className="success-icon">
-                  <svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>
+                  <svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12" /></svg>
                 </div>
                 <h2>Solicitação registrada!</h2>
                 <p>
                   A solicitação de férias de <strong>{servidor?.nome}</strong> foi salva com sucesso e já aparece na fila de aprovações.
                 </p>
-                <div style={{ display:'flex', gap:10 }}>
+                <div style={{ display: 'flex', gap: 10 }}>
                   <button className="btn" onClick={resetar}>Nova solicitação</button>
                   <button className="btn navy" onClick={() => router.push('/aprovacoes')}>Ver aprovações</button>
                 </div>
@@ -212,7 +212,7 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
                             <div className="ac-box">
                               {sugestoes.map(s => (
                                 <div key={s.idMatricula} className="ac-item" onClick={() => selecionarServidor(s)}>
-                                  <div className="ac-av">{s.nome.split(' ').slice(0,2).map((n:string) => n[0]).join('')}</div>
+                                  <div className="ac-av">{s.nome.split(' ').slice(0, 2).map((n: string) => n[0]).join('')}</div>
                                   <div>
                                     <div className="ac-nome">{s.nome}</div>
                                     <div className="ac-meta">{s.matricula} · {s.setor}</div>
@@ -262,7 +262,7 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
                         </div>
                         <div className="f-field">
                           <label className="f-label">Data de retorno</label>
-                          <input className="f-inp" type="date" value={dataFim} readOnly style={{ background:'var(--surface2)', color:'var(--text2)' }} />
+                          <input className="f-inp" type="date" value={dataFim} readOnly style={{ background: 'var(--surface2)', color: 'var(--text2)' }} />
                           {diasSolicitados > 0 && <span className="f-hint">{diasSolicitados} dias solicitados</span>}
                         </div>
 
@@ -291,14 +291,29 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
                         </div>
                       )}
 
-                      <div className="f-actions">
+                      {/* AVISO DE SALDO NEGATIVO (Novo!) */}
+                      {saldoSelecionado && (saldoSelecionado.diasDisponiveis - diasSolicitados < 0) && (
+                        <div className="alert-box" style={{ color: 'var(--red)', marginTop: 15, background: '#fee2e2', border: '1px solid #fca5a5' }}>
+                          <NavIcon t="warn" /> Atenção: O servidor não possui saldo suficiente para esta solicitação.
+                        </div>
+                      )}
+
+                      {erro && <div className="alert-box" style={{ color: 'var(--red)', marginTop: 15 }}>{erro}</div>}
+
+                      <div className="f-actions" style={{ marginTop: 30 }}>
                         <button type="button" className="btn" onClick={() => router.push('/dashboard')}>Cancelar</button>
                         <button
                           type="submit"
                           className="btn navy"
-                          disabled={!servidor || !saldoSelecionado || !dataInicio || isPending}
+                          disabled={
+                            isPending ||
+                            !servidor ||
+                            !saldoSelecionado ||
+                            !dataInicio ||
+                            (saldoSelecionado.diasDisponiveis - diasSolicitados < 0) // <-- A TRAVA AQUI!
+                          }
                         >
-                          {isPending ? <><span className="spinner"/>Salvando…</> : <><NavIcon t="send"/>Enviar solicitação</>}
+                          {isPending ? 'Enviando...' : 'Enviar Solicitação'}
                         </button>
                       </div>
                     </div>
@@ -311,8 +326,8 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
                     <h4>Saldo disponível</h4>
                     {loadingSaldos ? (
                       <>
-                        <div className="saldo-skeleton" style={{ marginBottom:12 }} />
-                        <div className="saldo-skeleton" style={{ width:'60%' }} />
+                        <div className="saldo-skeleton" style={{ marginBottom: 12 }} />
+                        <div className="saldo-skeleton" style={{ width: '60%' }} />
                       </>
                     ) : saldoSelecionado ? (
                       <>
@@ -324,11 +339,11 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
                           <div className="prog">
                             <div
                               className={`prog-fill${saldoSelecionado.diasDisponiveis >= 75 ? ' risk' : saldoSelecionado.diasDisponiveis >= 45 ? ' warn' : ''}`}
-                              style={{ width:`${Math.min((saldoSelecionado.diasDisponiveis/30)*100, 100)}%` }}
+                              style={{ width: `${Math.min((saldoSelecionado.diasDisponiveis / 30) * 100, 100)}%` }}
                             />
                           </div>
                           {saldoSelecionado.emRisco && (
-                            <div style={{ fontSize:11.5, color:'var(--amber)', marginTop:6, display:'flex', alignItems:'center', gap:4 }}>
+                            <div style={{ fontSize: 11.5, color: 'var(--amber)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                               <NavIcon t="warn" />Saldo em risco de perda
                             </div>
                           )}
@@ -345,7 +360,7 @@ export default function FeriasClient({ servidores, preSelectedId }: Props) {
                         )}
                       </>
                     ) : (
-                      <div style={{ fontSize:13, color:'var(--text3)', textAlign:'center', padding:'12px 0' }}>
+                      <div style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '12px 0' }}>
                         {servidor ? 'Nenhum saldo disponível' : 'Selecione um servidor'}
                       </div>
                     )}

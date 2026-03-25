@@ -2,10 +2,11 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase-server'
+import { auth } from '@/auth' // <-- Novo import de autenticação
 
 export interface CriarSolicitacaoInput {
   idMatricula: string
-  idExercicio: string | number // Aceita UUID ou ID numérico
+  idExercicio: string | number
   idSaldoFerias: string
   tipoAfastamento: 'FERIAS_INTEGRAL' | 'FERIAS_FRACIONADA' | 'LICENCA_ESPECIAL'
   tipoFracionamento: 'INTEGRAL' | 'QUINZE_QUINZE' | 'DEZ_VINTE' | 'DEZ_DEZ_DEZ'
@@ -15,56 +16,53 @@ export interface CriarSolicitacaoInput {
   observacoes?: string
 }
 
-// Agora fazendo o INSERT direto de forma segura e profissional
 export async function criarSolicitacaoAction(
   input: CriarSolicitacaoInput
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
+
+  // Pega quem está logado fazendo a solicitação
+  const session = await auth()
+  if (!session?.user?.id) return { ok: false, error: 'Acesso negado. Usuário não logado.' }
+
   const supabase = createServerClient()
+  console.log('🚀 [Server Action] Executando INSERT direto para a matrícula:', input.idMatricula)
 
   try {
-    // 1. Precisamos da descrição do exercício (ex: "2026/2027") para salvar na solicitação
-    const { data: ex } = await supabase
-      .from('exercicios')
-      .select('ano_inicial, ano_final, descricao')
-      .eq('id', input.idExercicio)
-      .single()
-
-    const exercicioTexto = ex?.descricao || (ex ? `${ex.ano_inicial}/${ex.ano_final}` : '2026/2027')
-
-    // 2. Fazemos o INSERT direto na tabela 'solicitacoes'
-    const { data: novaSolicitacao, error: insertError } = await supabase
+    const { data: nova, error: insertError } = await supabase
       .from('solicitacoes')
       .insert({
         id_matricula: input.idMatricula,
+        id_exercicio: input.idExercicio,
+        id_saldo_ferias: input.idSaldoFerias,
         tipo_afastamento: input.tipoAfastamento,
         tipo_fracionamento: input.tipoFracionamento,
         data_inicio: input.dataInicio,
         data_fim: input.dataFim,
         dias_solicitados: input.diasSolicitados,
-        exercicio: exercicioTexto,
         observacoes: input.observacoes || '',
-        status: 'PENDENTE' // Toda nova solicitação nasce pendente
+        status: 'PENDENTE',
+        solicitado_por: session.user.id // <-- MÁGICA AQUI: Registra quem pediu!
       })
       .select('id')
       .single()
 
-    if (insertError) throw new Error(insertError.message)
+    if (insertError) {
+      console.error('🚨 [Supabase Insert Error]:', insertError)
+      throw new Error(insertError.message)
+    }
 
-    // 3. Sucesso! Limpamos o cache das páginas para os dados novos aparecerem
     revalidatePath('/ferias')
-    revalidatePath('/aprovacoes')
     revalidatePath('/dashboard')
     revalidatePath('/meu-painel')
 
-    return { ok: true, id: novaSolicitacao.id }
+    return { ok: true, id: nova.id }
 
   } catch (err: any) {
-    console.error('🚨 [Server Action Error]:', err.message)
-    return { ok: false, error: err.message ?? 'Erro ao processar sua solicitação' }
+    console.error('❌ [Erro na Action]:', err.message)
+    return { ok: false, error: err.message }
   }
 }
 
-// Leitura de saldos (já estava funcionando, mantida)
 export async function getSaldosAction(idMatricula: string) {
   const supabase = createServerClient()
 
@@ -75,10 +73,7 @@ export async function getSaldosAction(idMatricula: string) {
     .gt('dias_disponiveis', 0)
     .order('id_exercicio')
 
-  if (error) {
-    console.error('🚨 [getSaldosAction Error]:', error.message)
-    return []
-  }
+  if (error) return []
 
   return (data ?? []).map((s: any) => ({
     idSaldo: s.id,
